@@ -3,10 +3,19 @@
 import React, { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import z from "zod"
+import { z } from "zod"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormControl,
+  FormMessage
+} from "@/components/ui/form"
+import { Textarea } from "@/components/ui/textarea"
 
 const PROJECT_TEMPLATES = [
   {
@@ -74,8 +83,9 @@ const formSchema = z.object({
     .max(1000, "Description is too long!")
 })
 
-const ProjectForm = () => {
-  const [isFocused,setIsFocused] = useState()
+export default function ProjectForm() {
+  const [isFocused, setIsFocused] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
   const form = useForm({
@@ -86,11 +96,28 @@ const ProjectForm = () => {
   })
 
   const handleTemplate = (description) => {
-    form.setValue("content", description)
+    form.setValue("content", description, {
+      shouldValidate: true,
+      shouldDirty: true
+    })
   }
 
   const onSubmit = async (values) => {
-    console.log(values)
+    try {
+      setIsLoading(true)
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      console.log("Submitted:", values)
+
+      // Example redirect
+
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -121,20 +148,51 @@ const ProjectForm = () => {
               {template.icon}
             </div>
 
-            <h3 className="text-sm font-semibold text-white group-hover:text-white">
+            <h3 className="text-sm font-semibold text-white">
               {template.title}
             </h3>
           </button>
         ))}
       </div>
-      <form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}
-        className={cn("relative border p-4 pt-1 rounded-xl bg-sidebar dark:bg-sidebar transition-all",isFocused&&"shadow-lg ring-2 ring-primary/20")}></form>
 
-      </form>
+      {/* Form */}
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className={cn(
+            "relative border p-6 rounded-xl bg-sidebar dark:bg-sidebar transition-all space-y-4",
+            isFocused && "shadow-lg ring-2 ring-primary/20"
+          )}
+        >
+          <FormField
+            control={form.control}
+            name="content"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    placeholder="Describe your project idea..."
+                    rows={6}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? "Generating..." : "Generate Project"}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   )
 }
-
-export default ProjectForm
